@@ -1,8 +1,10 @@
-## Disclaimer
+# Disclaimer
 
-This is NOT my code. I'm just screwing around with this repo
+This is NOT my code. I'm just screwing around with this repo for Research and need this public to pull remotely
 
-## BibTeX
+## Credit
+
+[Main Site](https://animatediff.github.io/)
 
 ```
 @article{guo2023animatediff,
