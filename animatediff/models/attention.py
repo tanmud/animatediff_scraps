@@ -8,10 +8,12 @@ import torch.nn.functional as F
 from torch import nn
 
 from diffusers.configuration_utils import ConfigMixin, register_to_config
-from diffusers.modeling_utils import ModelMixin
+from diffusers.models.modeling_utils import ModelMixin
 from diffusers.utils import BaseOutput
 from diffusers.utils.import_utils import is_xformers_available
-from diffusers.models.attention import CrossAttention, FeedForward, AdaLayerNorm
+from diffusers.models.attention_processor import Attention as CrossAttention
+from diffusers.models.attention import FeedForward
+from diffusers.models.normalization import AdaLayerNorm
 
 from einops import rearrange, repeat
 import pdb
@@ -140,6 +142,17 @@ class Transformer3DModel(ModelMixin, ConfigMixin):
             return (output,)
 
         return Transformer3DModelOutput(sample=output)
+
+
+class SparseCausalAttention2D(CrossAttention):
+    """Compatibility wrapper that preserves AnimateDiff call signatures on newer diffusers."""
+
+    def forward(self, hidden_states, encoder_hidden_states=None, attention_mask=None, video_length=None):
+        return super().forward(
+            hidden_states,
+            encoder_hidden_states=encoder_hidden_states,
+            attention_mask=attention_mask,
+        )
 
 
 class BasicTransformerBlock(nn.Module):

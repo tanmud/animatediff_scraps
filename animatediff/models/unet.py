@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.utils.checkpoint
 
 from diffusers.configuration_utils import ConfigMixin, register_to_config
-from diffusers.modeling_utils import ModelMixin
+from diffusers.models.modeling_utils import ModelMixin
 from diffusers.utils import BaseOutput, logging
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from .unet_blocks import (
@@ -477,11 +477,11 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
     @classmethod
     def from_pretrained_2d(cls, pretrained_model_name_or_path, unet_additional_kwargs={}, **kwargs):
         from diffusers import __version__
-        from diffusers.utils import DIFFUSERS_CACHE, SAFETENSORS_WEIGHTS_NAME, WEIGHTS_NAME, is_safetensors_available
-        from diffusers.modeling_utils import load_state_dict
+        from diffusers.utils import SAFETENSORS_WEIGHTS_NAME, WEIGHTS_NAME, is_safetensors_available
+        from diffusers.models.modeling_utils import load_state_dict
         print(f"loaded 3D unet's pretrained weights from {pretrained_model_name_or_path} ...")
 
-        cache_dir = kwargs.pop("cache_dir", DIFFUSERS_CACHE)
+        cache_dir = kwargs.pop("cache_dir", None)
         force_download = kwargs.pop("force_download", False)
         resume_download = kwargs.pop("resume_download", False)
         proxies = kwargs.pop("proxies", None)
