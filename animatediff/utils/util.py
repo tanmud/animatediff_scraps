@@ -88,6 +88,23 @@ def auto_download(local_path, is_dreambooth_lora=False):
         snapshot_download(repo_id=hf_repo, local_dir=folder, allow_patterns=[filename])
 
 
+def _remap_legacy_attention_keys(state_dict):
+    """Map legacy attention checkpoint keys to modern diffusers naming."""
+    remapped = {}
+    for key, value in state_dict.items():
+        new_key = key
+        if ".query." in new_key:
+            new_key = new_key.replace(".query.", ".to_q.")
+        if ".key." in new_key:
+            new_key = new_key.replace(".key.", ".to_k.")
+        if ".value." in new_key:
+            new_key = new_key.replace(".value.", ".to_v.")
+        if ".proj_attn." in new_key:
+            new_key = new_key.replace(".proj_attn.", ".to_out.0.")
+        remapped[new_key] = value
+    return remapped
+
+
 def load_weights(
     animation_pipeline,
     # motion module
@@ -135,9 +152,13 @@ def load_weights(
             
         # 1. vae
         converted_vae_checkpoint = convert_ldm_vae_checkpoint(dreambooth_state_dict, animation_pipeline.vae.config)
-        animation_pipeline.vae.load_state_dict(converted_vae_checkpoint)
+        converted_vae_checkpoint = _remap_legacy_attention_keys(converted_vae_checkpoint)
+        vae_missing, vae_unexpected = animation_pipeline.vae.load_state_dict(converted_vae_checkpoint, strict=False)
+        if len(vae_missing) > 0 or len(vae_unexpected) > 0:
+            print(f"VAE LOAD REPORT: missing={len(vae_missing)} unexpected={len(vae_unexpected)}")
         # 2. unet
         converted_unet_checkpoint = convert_ldm_unet_checkpoint(dreambooth_state_dict, animation_pipeline.unet.config)
+        converted_unet_checkpoint = _remap_legacy_attention_keys(converted_unet_checkpoint)
         animation_pipeline.unet.load_state_dict(converted_unet_checkpoint, strict=False)
         # 3. text_model
         animation_pipeline.text_encoder = convert_ldm_clip_checkpoint(dreambooth_state_dict)
