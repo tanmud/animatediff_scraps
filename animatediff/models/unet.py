@@ -477,19 +477,21 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
     @classmethod
     def from_pretrained_2d(cls, pretrained_model_name_or_path, unet_additional_kwargs={}, **kwargs):
         from diffusers import __version__
-        from diffusers.utils import SAFETENSORS_WEIGHTS_NAME, WEIGHTS_NAME, is_safetensors_available
+        from diffusers.utils import SAFETENSORS_WEIGHTS_NAME, WEIGHTS_NAME, _get_model_file, is_safetensors_available
         from diffusers.models.modeling_utils import load_state_dict
         print(f"loaded 3D unet's pretrained weights from {pretrained_model_name_or_path} ...")
 
         cache_dir = kwargs.pop("cache_dir", None)
         force_download = kwargs.pop("force_download", False)
-        resume_download = kwargs.pop("resume_download", False)
+        _ = kwargs.pop("resume_download", False)
         proxies = kwargs.pop("proxies", None)
         local_files_only = kwargs.pop("local_files_only", False)
-        use_auth_token = kwargs.pop("use_auth_token", None)
+        token = kwargs.pop("token", None)
+        if token is None:
+            token = kwargs.pop("use_auth_token", None)
         revision = kwargs.pop("revision", None)
         subfolder = kwargs.pop("subfolder", None)
-        device_map = kwargs.pop("device_map", None)
+        _ = kwargs.pop("device_map", None)
 
         user_agent = {
             "diffusers": __version__,
@@ -500,15 +502,14 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
         model_file = None
         if is_safetensors_available():
             try:
-                model_file = cls._get_model_file(
+                model_file = _get_model_file(
                     pretrained_model_name_or_path,
                     weights_name=SAFETENSORS_WEIGHTS_NAME,
                     cache_dir=cache_dir,
                     force_download=force_download,
-                    resume_download=resume_download,
                     proxies=proxies,
                     local_files_only=local_files_only,
-                    use_auth_token=use_auth_token,
+                    token=token,
                     revision=revision,
                     subfolder=subfolder,
                     user_agent=user_agent,
@@ -517,15 +518,14 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
                 pass
 
         if model_file is None:
-            model_file = cls._get_model_file(
+            model_file = _get_model_file(
                 pretrained_model_name_or_path,
                 weights_name=WEIGHTS_NAME,
                 cache_dir=cache_dir,
                 force_download=force_download,
-                resume_download=resume_download,
                 proxies=proxies,
                 local_files_only=local_files_only,
-                use_auth_token=use_auth_token,
+                token=token,
                 revision=revision,
                 subfolder=subfolder,
                 user_agent=user_agent,
@@ -536,13 +536,11 @@ class UNet3DConditionModel(ModelMixin, ConfigMixin):
             cache_dir=cache_dir,
             return_unused_kwargs=True,
             force_download=force_download,
-            resume_download=resume_download,
             proxies=proxies,
             local_files_only=local_files_only,
-            use_auth_token=use_auth_token,
+            token=token,
             revision=revision,
             subfolder=subfolder,
-            device_map=device_map,
             **kwargs,
         )
 
